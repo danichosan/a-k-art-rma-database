@@ -92,6 +92,26 @@ class DatabaseManager:
             cur = conn.cursor()
             cur.execute('SELECT * FROM prizes WHERE used = 0 ORDER BY RANDOM()')
             return cur.fetchall()[0]
+        
+def get_winners_count(self, prize_id):
+    conn = sqlite3.connect(self.database)
+    with conn:
+        cur = conn.cursor()
+        cur.execute('SELECT COUNT(*) FROM winners WHERE prize_id = ?', (prize_id,))
+        return cur.fetchone()[0][0]
+    
+def get_rating(self):
+    conn = sqlite3.connect(self.database)
+    with conn:
+        cur = conn.cursor()
+        cur.execute('''
+            SELECT users.user_name, Count(winners.user_id) as count_prize FROM winners
+            INNER JOIN users on users.user_id = winners.user_id
+            GROUP BY winners.user_id
+            ORDER BY count_prize
+            LIMIT 10
+        ''')
+        return cur.fetchall()
     
   
 def hide_img(img_name):
@@ -100,6 +120,7 @@ def hide_img(img_name):
     pixelated_image = cv2.resize(blurred_image, (30, 30), interpolation=cv2.INTER_NEAREST)
     pixelated_image = cv2.resize(pixelated_image, (image.shape[1], image.shape[0]), interpolation=cv2.INTER_NEAREST)
     cv2.imwrite(f'hidden_img/{img_name}', pixelated_image)
+
 
 if __name__ == '__main__':
     manager = DatabaseManager(DATABASE)
